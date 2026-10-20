@@ -1,0 +1,26 @@
+# Project documents and real data never leave this machine
+Gestion de Projet/
+local-data/
+*.xlsx
+*.xls
+*.docx
+*.doc
+*.pdf
+*.drawio
+*.csv
+
+# Build
+node_modules/
+dist/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+
+# Offline preview with embedded private data
+.offline/
+Ouvrir le tableau de bord.html
+.claude/

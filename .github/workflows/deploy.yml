@@ -26,8 +26,9 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          # Apps Script web-app URL, set under Settings > Secrets and variables > Actions > Variables.
-          VITE_DATA_URL: ${{ vars.DATA_URL }}
+          # Apps Script web-app URL. The repository variable DATA_URL, when set, takes precedence.
+          # Not a secret: the URL is visible in the published page and returns only dashboard fields.
+          VITE_DATA_URL: ${{ vars.DATA_URL || 'https://script.google.com/macros/s/AKfycbwtYM0ncgUZ7yRctXIkgxGEZIU4PoXVOg2fdR6I5K6R5grpHtkHZeVPU0njhD8LR04yGA/exec' }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

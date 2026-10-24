@@ -30,6 +30,9 @@ export interface ProjectData {
   };
   milestones: Milestone[];
   tasks: Task[];
+  /** When the data source produced this snapshot (ISO timestamp). */
+  generatedAt?: string;
 }
 
-export type DataSource = 'demo' | 'local' | 'live';
+/** `cached`: the live source failed, showing the last live data seen. */
+export type DataSource = 'demo' | 'local' | 'live' | 'cached';

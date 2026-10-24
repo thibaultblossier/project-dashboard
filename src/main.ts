@@ -5,7 +5,7 @@ import { compute } from './model';
 import { categories } from './ui/categories';
 import { curveCard, drawCurve } from './ui/curve';
 import { drawGraph, graphCard } from './ui/graph';
-import { header } from './ui/header';
+import { header, unavailable } from './ui/header';
 import { kpis } from './ui/kpis';
 import { timeline } from './ui/timeline';
 import { installTaskTooltips, setTooltipMetrics } from './ui/tooltip';
@@ -30,8 +30,16 @@ function sized(el: HTMLElement, draw: (el: HTMLElement) => void) {
   observers.push(ro);
 }
 
+let rendered = false;
+
 async function render() {
-  const { data, source } = await loadData();
+  const loaded = await loadData();
+  if (!loaded.ok) {
+    // Keep whatever is on screen; only an empty page gets the error card.
+    if (!rendered) app.innerHTML = unavailable();
+    return;
+  }
+  const { data, source, updatedAt } = loaded;
   const m = compute(data, currentDay());
   setTooltipMetrics(m);
   document.title = `${data.project.title} · Tableau de bord`;
@@ -40,7 +48,7 @@ async function render() {
   observers = [];
 
   app.innerHTML = `
-    ${header(data, m, source, new Date())}
+    ${header(data, m, source, updatedAt)}
     <main>
       ${kpis(m)}
       <div class="row-2">${curveCard(m)}${categories(m)}</div>
@@ -52,6 +60,7 @@ async function render() {
 
   sized(app.querySelector('#curve')!, (el) => drawCurve(el, m));
   sized(app.querySelector('#graph')!, (el) => drawGraph(el, m));
+  rendered = true;
 }
 
 installTaskTooltips();

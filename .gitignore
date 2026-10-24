@@ -9,6 +9,10 @@ local-data/
 *.drawio
 *.csv
 
+# Local environment (data source URL)
+.env.local
+.env.*.local
+
 # Build
 node_modules/
 dist/

@@ -55,7 +55,7 @@ export function meter(value: number, expected?: number, cls = ''): string {
 
 /**
  * Deadline gap of a task as a small pill: "+3 j" finished or still open past
- * its deadline, "−2 j" finished early, "à temps" finished on the day.
+ * its deadline, "−2 j" finished early, "À temps" finished on the day.
  * Empty for tasks with nothing to report.
  */
 export function slipPill(t: TaskView): string {
@@ -63,7 +63,7 @@ export function slipPill(t: TaskView): string {
   if (t.doneDay !== null) {
     if (t.slip > 0) return `<span class="pill pill-doneLate" title="Terminée ${t.slip} j après l’échéance">+${t.slip} j</span>`;
     if (t.slip < 0) return `<span class="pill pill-done" title="Terminée ${-t.slip} j avant l’échéance">−${-t.slip} j</span>`;
-    return '<span class="pill pill-done">à temps</span>';
+    return '<span class="pill pill-done">À temps</span>';
   }
   if (t.status === 'late') return `<span class="pill pill-late" title="Échéance dépassée de ${t.slip} j">+${t.slip} j</span>`;
   return '';

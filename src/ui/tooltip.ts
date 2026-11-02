@@ -25,6 +25,7 @@ function ref(m: Metrics, id: number): string {
 
 export function taskCard(t: TaskView, m: Metrics): string {
   const rows: string[] = [];
+  if (t.startDay !== null) rows.push(`<dt>Début estimé</dt><dd>${shortDate(t.startDay)}</dd>`);
   if (t.dueDay !== null) rows.push(`<dt>Échéance</dt><dd>${shortDate(t.dueDay)} · ${relative(t.dueDay, m.today)}</dd>`);
   if (t.doneDay !== null) {
     const s = t.slip > 0 ? ` · ${t.slip} j de retard` : t.slip < 0 ? ` · ${-t.slip} j d’avance` : ' · à l’heure';

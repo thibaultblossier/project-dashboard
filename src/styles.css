@@ -425,18 +425,44 @@ main { display: grid; gap: 14px; }
 .tl-mark {
   position: absolute;
   top: 50%;
+  width: 16px;
+  height: 16px;
   transform: translate(-50%, -50%);
-  z-index: 2;
+  z-index: 3;
   border-radius: 50%;
   background: var(--surface);
   box-shadow: 0 0 0 2px var(--surface);
 }
 .tl-mark .st-icon { width: 100%; height: 100%; }
-.tl-due { position: absolute; top: 50%; width: 2px; height: 12px; margin: -6px 0 0 -1px; background: var(--muted); border-radius: 1px; z-index: 1; }
-.tl-link { position: absolute; top: 50%; height: 2px; margin-top: -1px; border-radius: 1px; z-index: 1; }
-.tl-link.is-early { background: var(--st-done); opacity: 0.5; }
-.tl-link.is-late { background: var(--st-doneLate); height: 4px; margin-top: -2px; border-radius: 2px; }
-.tl-link.is-overdue { background: var(--st-late); height: 3px; margin-top: -1.5px; }
+
+/* Gantt bar: solid once finished, light fill + outline while open. */
+.tl-bar {
+  --c: var(--st-todo);
+  position: absolute;
+  top: 50%;
+  height: 12px;
+  min-width: 4px;
+  margin-top: -6px;
+  border-radius: 3px;
+  z-index: 1;
+  background: color-mix(in srgb, var(--c) 22%, var(--surface));
+  box-shadow: inset 0 0 0 1.5px var(--c);
+}
+.tl-bar.is-done { --c: var(--st-done); }
+.tl-bar.is-doneLate { --c: var(--st-doneLate); }
+.tl-bar.is-late { --c: var(--st-late); }
+.tl-bar.is-soon { --c: var(--st-soon); }
+.tl-bar.is-done, .tl-bar.is-doneLate { background: var(--c); }
+
+.tl-link { position: absolute; top: 50%; border-radius: 0 3px 3px 0; z-index: 2; }
+.tl-link.is-late,
+.tl-link.is-overdue {
+  height: 12px;
+  margin-top: -6px;
+  background: repeating-linear-gradient(-45deg, var(--c) 0 3px, color-mix(in srgb, var(--c) 35%, var(--surface)) 3px 6px);
+}
+.tl-link.is-late { --c: var(--st-doneLate); }
+.tl-link.is-overdue { --c: var(--st-late); }
 .tl-overdue { position: absolute; top: 50%; transform: translate(6px, -50%); font-size: 11.5px; font-weight: 700; color: var(--ink); z-index: 2; background: var(--surface); padding: 0 3px; border-radius: 4px; }
 .tl-unplanned { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); z-index: 2; padding: 0 4px; border-radius: 4px; background: var(--surface); font-size: 12px; font-style: italic; color: var(--muted); }
 

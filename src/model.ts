@@ -10,11 +10,18 @@ export const isDone = (t: { status: Status }) => t.status === 'done' || t.status
 export const SOON_DAYS = 7;
 /** Horizon of the "À surveiller" lists. */
 export const WATCH_DAYS = 14;
+/** Shortest Gantt bar, for tasks due when (or before) their dependencies are. */
+const MIN_BAR_DAYS = 3;
 
 export interface TaskView extends Task {
   status: Status;
   dueDay: number | null;
   doneDay: number | null;
+  /**
+   * Estimated start: the latest deadline among its dependencies, or the project start.
+   * The Sheet has no start dates, so this is derived, never entered.
+   */
+  startDay: number | null;
   /** Parents not finished yet. */
   waitingOn: number[];
   children: number[];
@@ -110,12 +117,18 @@ export function compute(data: ProjectData, today: number): Metrics {
     let slip = 0;
     if (dueDay !== null && doneDay !== null) slip = doneDay - dueDay;
     else if (status === 'late' && dueDay !== null) slip = today - dueDay;
+    let startDay: number | null = null;
+    if (dueDay !== null) {
+      const parentDues = parents.map((p) => raw.get(p)!.due).filter((d): d is string => !!d).map(toDay);
+      startDay = Math.min(parentDues.length ? Math.max(...parentDues) : start, dueDay - MIN_BAR_DAYS);
+    }
     return {
       ...t,
       parents,
       status,
       dueDay,
       doneDay,
+      startDay,
       slip,
       waitingOn: parents.filter((p) => !raw.get(p)!.done),
       children: data.tasks.filter((c) => c.parents.includes(t.id)).map((c) => c.id),

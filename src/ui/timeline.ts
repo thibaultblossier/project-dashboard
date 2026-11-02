@@ -2,11 +2,11 @@ import { axisMonths, shortDate } from '../dates';
 import { isDone, type Metrics, type TaskView } from '../model';
 import { catColor, esc, legendStatuses, pct, slipPill, statusIcon } from './shared';
 
-/** Marker diameter grows with the task weight (area ∝ weight). */
-const markerSize = (w: number | null) => Math.round(12 + 3 * Math.sqrt(w ?? 1));
+/** Diameter of the "finished" marker drawn on the bars. */
+const MARK = 16;
 
 export function timeline(m: Metrics): string {
-  const days = m.tasks.flatMap((t) => [t.dueDay, t.doneDay]).filter((d): d is number => d !== null);
+  const days = m.tasks.flatMap((t) => [t.startDay, t.dueDay, t.doneDay]).filter((d): d is number => d !== null);
   const lo = Math.min(m.start, ...days);
   const hi = Math.max(m.end, m.today, ...days) + 3;
   const pos = (d: number) => `${(((d - lo) / (hi - lo)) * 100).toFixed(3)}%`;
@@ -25,22 +25,21 @@ export function timeline(m: Metrics): string {
       ${bg}
     </div>`;
 
+  const span = (a: number, b: number) => `left:${pos(a)};right:calc(100% - ${pos(b)})`;
+
   const marks = (t: TaskView): string => {
-    const size = markerSize(t.weight);
-    const icon = (d: number) =>
-      `<span class="tl-mark" style="left:${pos(d)};width:${size}px;height:${size}px">${statusIcon(t.status, size)}</span>`;
+    const icon = (d: number) => `<span class="tl-mark" style="left:${pos(d)}">${statusIcon(t.status, MARK)}</span>`;
     if (t.dueDay === null) return t.doneDay !== null ? icon(t.doneDay) : '<span class="tl-unplanned">Non planifiée</span>';
+    const bar = `<span class="tl-bar is-${t.status}" style="${span(t.startDay!, t.dueDay)}"></span>`;
     if (t.doneDay !== null) {
-      const [a, b] = [Math.min(t.dueDay, t.doneDay), Math.max(t.dueDay, t.doneDay)];
-      const cls = t.doneDay > t.dueDay ? 'is-late' : 'is-early';
-      return `${t.doneDay !== t.dueDay ? `<span class="tl-link ${cls}" style="left:${pos(a)};right:calc(100% - ${pos(b)})"></span>` : ''}
-        <span class="tl-due" style="left:${pos(t.dueDay)}"></span>${icon(t.doneDay)}`;
+      const over = t.doneDay > t.dueDay ? `<span class="tl-link is-late" style="${span(t.dueDay, t.doneDay)}"></span>` : '';
+      return `${bar}${over}${icon(t.doneDay)}`;
     }
     if (t.status === 'late') {
-      return `<span class="tl-link is-overdue" style="left:${pos(t.dueDay)};right:calc(100% - ${pos(m.today)})"></span>
-        <span class="tl-overdue" style="left:${pos(m.today)}">+${t.slip} j</span>${icon(t.dueDay)}`;
+      return `${bar}<span class="tl-link is-overdue" style="${span(t.dueDay, m.today)}"></span>
+        <span class="tl-overdue" style="left:${pos(m.today)}">+${t.slip} j</span>`;
     }
-    return icon(t.dueDay);
+    return bar;
   };
 
   const row = (t: TaskView) => `
@@ -60,7 +59,7 @@ export function timeline(m: Metrics): string {
     .map((c) => {
       const tasks = m.tasks
         .filter((t) => t.category === c.name)
-        .sort((a, b) => (a.dueDay ?? Infinity) - (b.dueDay ?? Infinity) || a.id - b.id);
+        .sort((a, b) => (a.startDay ?? Infinity) - (b.startDay ?? Infinity) || (a.dueDay ?? Infinity) - (b.dueDay ?? Infinity) || a.id - b.id);
       return `
         <div class="tl-group">
           <div class="tl-ghead">
@@ -78,7 +77,7 @@ export function timeline(m: Metrics): string {
       <div class="card-head">
         <div>
           <h2>Planning des tâches</h2>
-          <p class="card-sub">Échéance de chaque tâche, repère proportionnel à son poids. Le trait relie l’échéance à la date de réalisation ; la colonne Écart donne les jours de retard (+) ou d’avance (−).</p>
+          <p class="card-sub">Chaque barre va du début estimé (échéance de la dernière tâche dont elle dépend, sinon début du projet) jusqu’à l’échéance. Barre pleine : terminée ; le prolongement montre le retard. La colonne Écart donne les jours de retard (+) ou d’avance (−).</p>
         </div>
         ${legendStatuses()}
       </div>

@@ -12,7 +12,8 @@ export function categories(m: Metrics): string {
           <div class="cat-line">
             <span class="cat-name"><i class="swatch" style="background:${catColor(c.index)}"></i>${esc(c.name)}</span>
             <span class="cat-count">${c.doneCount}/${c.count} tâches</span>
-            ${c.lateCount ? `<span class="cat-late">${statusIcon('late', 12)}${c.lateCount}</span>` : ''}
+            ${c.doneLateCount ? `<span class="cat-late" title="Terminées en retard">${statusIcon('doneLate', 12)}${c.doneLateCount}</span>` : ''}
+            ${c.lateCount ? `<span class="cat-late" title="En retard">${statusIcon('late', 12)}${c.lateCount}</span>` : ''}
             <span class="cat-pct ${behind ? 'is-behind' : ''}">${pct(done)}</span>
           </div>
           ${meter(done, expected)}

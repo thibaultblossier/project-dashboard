@@ -1,6 +1,6 @@
 import { axisMonths, shortDate } from '../dates';
-import type { Metrics, TaskView } from '../model';
-import { catColor, esc, legendStatuses, pct, statusIcon } from './shared';
+import { isDone, type Metrics, type TaskView } from '../model';
+import { catColor, esc, legendStatuses, pct, slipPill, statusIcon } from './shared';
 
 /** Marker diameter grows with the task weight (area ∝ weight). */
 const markerSize = (w: number | null) => Math.round(12 + 3 * Math.sqrt(w ?? 1));
@@ -48,10 +48,11 @@ export function timeline(m: Metrics): string {
       <div class="tl-c tl-icon">${statusIcon(t.status, 16)}</div>
       <div class="tl-c tl-id">#${t.id}</div>
       <div class="tl-c tl-name"><span>${esc(t.name)}</span>${
-        t.waitingOn.length && t.status !== 'done' ? `<small class="wait">attend ${t.waitingOn.map((p) => `#${p}`).join(', ')}</small>` : ''
+        t.waitingOn.length && !isDone(t) ? `<small class="wait">attend ${t.waitingOn.map((p) => `#${p}`).join(', ')}</small>` : ''
       }</div>
       <div class="tl-c tl-weight">${t.weight ?? '—'}</div>
       <div class="tl-c tl-date">${t.dueDay !== null ? shortDate(t.dueDay) : '—'}</div>
+      <div class="tl-c tl-slip">${slipPill(t)}</div>
       <div class="tl-c tl-track">${bg}${marks(t)}</div>
     </div>`;
 
@@ -65,7 +66,7 @@ export function timeline(m: Metrics): string {
           <div class="tl-ghead">
             <i class="swatch" style="background:${catColor(c.index)}"></i>
             <b>${esc(c.name)}</b>
-            <span class="muted">${c.doneCount}/${c.count} terminées · ${pct(c.total ? (c.done / c.total) * 100 : 0)} du poids</span>
+            <span class="muted">${c.doneCount}/${c.count} terminées${c.doneLateCount ? ` (dont ${c.doneLateCount} en retard)` : ''} · ${pct(c.total ? (c.done / c.total) * 100 : 0)} du poids</span>
           </div>
           ${tasks.map(row).join('')}
         </div>`;
@@ -77,7 +78,7 @@ export function timeline(m: Metrics): string {
       <div class="card-head">
         <div>
           <h2>Planning des tâches</h2>
-          <p class="card-sub">Échéance de chaque tâche. La taille du repère indique son poids, le trait relie l’échéance à la date de réalisation.</p>
+          <p class="card-sub">Échéance de chaque tâche, repère proportionnel à son poids. Le trait relie l’échéance à la date de réalisation ; la colonne Écart donne les jours de retard (+) ou d’avance (−).</p>
         </div>
         ${legendStatuses()}
       </div>
@@ -88,6 +89,7 @@ export function timeline(m: Metrics): string {
           <div class="tl-c tl-name">Tâche</div>
           <div class="tl-c tl-weight">Poids</div>
           <div class="tl-c tl-date">Échéance</div>
+          <div class="tl-c tl-slip">Écart</div>
           <div class="tl-c tl-track">${axis}</div>
         </div>
         ${groups}

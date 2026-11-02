@@ -1,4 +1,4 @@
-import type { Status } from '../model';
+import type { Status, TaskView } from '../model';
 
 const ENTITIES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ENTITIES[c]);
@@ -13,10 +13,11 @@ export function pts(v: number): string {
   return `${r > 0 ? '+' : '−'}${Math.abs(r)} pt${Math.abs(r) > 1 ? 's' : ''}`;
 }
 
-export const STATUS_ORDER: Status[] = ['done', 'late', 'soon', 'todo', 'unplanned'];
+export const STATUS_ORDER: Status[] = ['done', 'doneLate', 'late', 'soon', 'todo', 'unplanned'];
 
 export const STATUS_LABEL: Record<Status, string> = {
-  done: 'Terminée',
+  done: 'Terminée à temps',
+  doneLate: 'Terminée en retard',
   late: 'En retard',
   soon: 'Échéance ≤ 7 j',
   todo: 'À venir',
@@ -30,6 +31,7 @@ export function statusIcon(s: Status, size = 16): string {
   const c = `var(--st-${s})`;
   const glyph: Record<Status, string> = {
     done: `<circle cx="8" cy="8" r="8" fill="${c}"/><path d="M4.6 8.3l2.2 2.2 4.6-4.8" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
+    doneLate: `<circle cx="8" cy="8" r="8" fill="${c}"/><path d="M4.6 8.3l2.2 2.2 4.6-4.8" fill="none" stroke="#1a1a19" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
     late: `<circle cx="8" cy="8" r="8" fill="${c}"/><path d="M8 4.2v4.6" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/><circle cx="8" cy="11.6" r="1.1" fill="#fff"/>`,
     soon: `<circle cx="8" cy="8" r="8" fill="${c}"/><path d="M8 4.3V8l2.6 1.6" fill="none" stroke="#1a1a19" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`,
     todo: `<circle cx="8" cy="8" r="6.6" fill="none" stroke="${c}" stroke-width="2.4"/>`,
@@ -49,4 +51,20 @@ export function meter(value: number, expected?: number, cls = ''): string {
   const v = Math.max(0, Math.min(100, value));
   const tick = expected === undefined || expected <= 0 ? '' : `<span class="meter-tick" style="left:${Math.max(0, Math.min(100, expected))}%"></span>`;
   return `<div class="meter ${cls}"><span class="meter-fill" style="width:${v}%"></span>${tick}</div>`;
+}
+
+/**
+ * Deadline gap of a task as a small pill: "+3 j" finished or still open past
+ * its deadline, "−2 j" finished early, "à temps" finished on the day.
+ * Empty for tasks with nothing to report.
+ */
+export function slipPill(t: TaskView): string {
+  if (t.dueDay === null) return '';
+  if (t.doneDay !== null) {
+    if (t.slip > 0) return `<span class="pill pill-doneLate" title="Terminée ${t.slip} j après l’échéance">+${t.slip} j</span>`;
+    if (t.slip < 0) return `<span class="pill pill-done" title="Terminée ${-t.slip} j avant l’échéance">−${-t.slip} j</span>`;
+    return '<span class="pill pill-done">à temps</span>';
+  }
+  if (t.status === 'late') return `<span class="pill pill-late" title="Échéance dépassée de ${t.slip} j">+${t.slip} j</span>`;
+  return '';
 }

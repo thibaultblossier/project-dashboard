@@ -1,7 +1,10 @@
 import { toDay } from './dates';
 import type { Milestone, ProjectData, Task } from './types';
 
-export type Status = 'done' | 'late' | 'soon' | 'todo' | 'unplanned';
+/** `done`: finished on time (or early); `doneLate`: finished after the deadline. */
+export type Status = 'done' | 'doneLate' | 'late' | 'soon' | 'todo' | 'unplanned';
+
+export const isDone = (t: { status: Status }) => t.status === 'done' || t.status === 'doneLate';
 
 /** A task is "soon" when its deadline is within this many days. */
 export const SOON_DAYS = 7;
@@ -31,6 +34,8 @@ export interface CategoryStat {
   expected: number;
   count: number;
   doneCount: number;
+  /** Finished after their deadline. */
+  doneLateCount: number;
   lateCount: number;
 }
 
@@ -55,7 +60,7 @@ export interface Metrics {
 }
 
 function statusOf(t: Task, today: number): Status {
-  if (t.done) return 'done';
+  if (t.done) return t.due && toDay(t.done) > toDay(t.due) ? 'doneLate' : 'done';
   if (!t.due) return 'unplanned';
   const due = toDay(t.due);
   if (due < today) return 'late';
@@ -138,15 +143,16 @@ export function compute(data: ProjectData, today: number): Metrics {
       name,
       index,
       total: own.reduce((s, t) => s + w(t), 0),
-      done: own.filter((t) => t.status === 'done').reduce((s, t) => s + w(t), 0),
+      done: own.filter(isDone).reduce((s, t) => s + w(t), 0),
       expected: own.filter((t) => t.dueDay !== null && t.dueDay <= today).reduce((s, t) => s + w(t), 0),
       count: own.length,
-      doneCount: own.filter((t) => t.status === 'done').length,
+      doneCount: own.filter(isDone).length,
+      doneLateCount: own.filter((t) => t.status === 'doneLate').length,
       lateCount: own.filter((t) => t.status === 'late').length,
     };
   });
 
-  const counts: Record<Status, number> = { done: 0, late: 0, soon: 0, todo: 0, unplanned: 0 };
+  const counts: Record<Status, number> = { done: 0, doneLate: 0, late: 0, soon: 0, todo: 0, unplanned: 0 };
   for (const t of tasks) counts[t.status]++;
 
   const milestones = [...data.milestones]

@@ -1,6 +1,6 @@
 import { relative, shortDate } from '../dates';
 import { WATCH_DAYS, type Metrics, type TaskView } from '../model';
-import { catColor, esc, statusIcon } from './shared';
+import { catColor, esc, slipPill, statusIcon } from './shared';
 
 function item(t: TaskView, m: Metrics, when: 'due' | 'done'): string {
   const day = when === 'done' ? t.doneDay! : t.dueDay!;
@@ -15,6 +15,7 @@ function item(t: TaskView, m: Metrics, when: 'due' | 'done'): string {
         <div class="w-meta">
           <span><i class="swatch" style="background:${catColor(t.categoryIndex)}"></i>${esc(t.category)}</span>
           <span>poids ${t.weight ?? '—'}</span>
+          ${slipPill(t)}
           ${waiting}
         </div>
       </div>

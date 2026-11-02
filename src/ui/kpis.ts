@@ -25,8 +25,11 @@ function gapBadge(gap: number): string {
 export function kpis(m: Metrics): string {
   const late = m.tasks.filter((t) => t.status === 'late').sort((a, b) => a.dueDay! - b.dueDay!);
   const soon = m.tasks.filter((t) => t.status === 'soon').sort((a, b) => a.dueDay! - b.dueDay!);
-  const done = m.counts.done;
+  const onTime = m.counts.done;
+  const doneLate = m.counts.doneLate;
+  const done = onTime + doneLate;
   const total = m.tasks.length;
+  const share = (n: number) => (total ? (n / total) * 100 : 0);
   const ms = m.nextMilestone;
   const daysLeft = Math.max(0, m.end - m.today);
 
@@ -48,7 +51,14 @@ export function kpis(m: Metrics): string {
       <article class="kpi">
         <h2>Tâches terminées</h2>
         <div class="kpi-value">${done}<small> / ${total}</small></div>
-        ${meter(total ? (done / total) * 100 : 0, undefined, 'meter-good')}
+        <div class="meter meter-split" role="img" aria-label="${onTime} à temps, ${doneLate} en retard sur ${total}">
+          ${onTime ? `<span class="seg seg-done" style="width:${share(onTime)}%"></span>` : ''}
+          ${doneLate ? `<span class="seg seg-doneLate" style="width:${share(doneLate)}%"></span>` : ''}
+        </div>
+        <ul class="kpi-split">
+          <li>${statusIcon('done', 14)}<b>${onTime}</b> à temps</li>
+          <li>${statusIcon('doneLate', 14)}<b>${doneLate}</b> en retard</li>
+        </ul>
         <p class="kpi-sub">${m.counts.unplanned ? `dont ${m.counts.unplanned} non planifiée${m.counts.unplanned > 1 ? 's' : ''}` : 'toutes planifiées'}</p>
       </article>
 

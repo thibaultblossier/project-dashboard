@@ -1,5 +1,5 @@
 import { shortDate } from '../dates';
-import type { Metrics } from '../model';
+import { isDone, type Metrics } from '../model';
 import { layeredLayout } from './layout';
 import { catColor, esc, legendStatuses, statusIcon } from './shared';
 
@@ -79,8 +79,8 @@ export function drawGraph(el: HTMLElement, m: Metrics) {
         d += ` C${p.x},${my} ${q.x},${my} ${q.x},${q.top}`;
         if (i < pts.length - 1) d += ` L${q.x},${q.bottom}`;
       }
-      const blocking = parent.status === 'late' && child.status !== 'done';
-      const cls = parent.status === 'done' ? 'is-done' : blocking ? 'is-blocking' : '';
+      const blocking = parent.status === 'late' && !isDone(child);
+      const cls = isDone(parent) ? 'is-done' : blocking ? 'is-blocking' : '';
       return `<path class="edge ${cls}" data-from="${from}" data-to="${to}" d="${d}" marker-end="url(#arrow${blocking ? '-b' : ''})"/>`;
     })
     .join('');
